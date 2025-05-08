@@ -61,5 +61,7 @@ Commenting Features
 * Comments persist across sessions
 * Click on the comment sidebar to see all comments with timestamps
 * Click on any comment to be taken back to the exact time in the video
+
+
 Built with ❤️ using Next.js and Velt
 
