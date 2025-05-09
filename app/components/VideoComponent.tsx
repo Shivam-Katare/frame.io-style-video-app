@@ -1,10 +1,12 @@
-import { Search } from "lucide-react";
+import {
+  Search
+} from "lucide-react";
 import AuthComponent from "./AuthComponent";
 import React, {
   useEffect,
   useState,
+  useCallback,
   useRef,
-  MouseEvent as ReactMouseEvent,
 } from "react";
 import {
   VeltCommentsSidebar,
@@ -16,19 +18,24 @@ import {
 } from "@veltdev/react";
 import VeltDocument from "./VeltDocument";
 
+interface CommentClickDetail {
+  commentId: string;
+  location ? : {
+    currentMediaPosition ? : number;[key: string]: any;
+  };
+}
+
 interface HTMLVideoElementWithCurrentTime extends HTMLVideoElement {
   currentTime: number;
   pause: () => void;
   paused: boolean;
-  play: () => void;
+  play: () => Promise < void > ;
   duration: number;
 }
 
 interface TimelineCommentDetail {
-  location?: {
-    currentMediaPosition?: number;
-    // Add other properties of your 'location' object if they exist
-    [key: string]: any; // To allow other potential properties
+  location ? : {
+    currentMediaPosition ? : number;[key: string]: any;
   };
 }
 
@@ -36,20 +43,28 @@ interface VeltLocation {
   id: string;
   locationName: string;
   currentMediaPosition: number;
-  videoPlayerId: string;
-  [key: string]: any; // To allow other potential properties
+  videoPlayerId: string;[key: string]: any;
 }
 
 export default function VideoComponent() {
-  const { client } = useVeltClient();
-  const videoRef = useRef<HTMLVideoElementWithCurrentTime | null>(null);
-  const commentPlayerTimelineRef = useRef<VeltCommentPlayerTimeline | null>(null);
-  const progressBarRef = useRef<HTMLDivElement | null>(null);
-  const timePassedDivRef = useRef<HTMLDivElement | null>(null);
-  const [progress, setProgress] = useState<number>(0);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const {
+    client
+  } = useVeltClient();
+  const videoRef = useRef < HTMLVideoElementWithCurrentTime | null > (null);
+  const progressBarRef = useRef < HTMLDivElement | null > (null);
+  const timePassedDivRef = useRef < HTMLDivElement | null > (null);
+  const [progress, setProgress] = useState < number > (0);
+  const [isPlaying, setIsPlaying] = useState < boolean > (false);
 
   const commentModeState = useCommentModeState();
+
+  const updateCustomTimeline = useCallback(() => {
+    if (videoRef.current && timePassedDivRef.current) {
+      const seekPercent =
+        (videoRef.current.currentTime / videoRef.current.duration) * 100 - 1.5;
+      timePassedDivRef.current.style.width = `${seekPercent}%`;
+    }
+  }, [videoRef]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -70,11 +85,9 @@ export default function VideoComponent() {
       video.removeEventListener("pause", () => setIsPlaying(false));
       video.removeEventListener("play", () => setIsPlaying(false));
     };
-  }, [videoRef]);
+  }, [videoRef, updateCustomTimeline]);
 
-  const handleSeek = (
-    event: ReactMouseEvent<HTMLDivElement, MouseEvent>
-  ) => {
+  const handleSeek = (event: React.MouseEvent < HTMLDivElement > ) => {
     const video = videoRef.current;
     const progressBar = progressBarRef.current;
     if (!video || !progressBar) return;
@@ -94,15 +107,15 @@ export default function VideoComponent() {
     const secs: number = Math.floor(seconds % 60);
 
     return [
-      hours > 0 ? String(hours).padStart(2, "0") : null,
-      String(minutes).padStart(2, "0"),
-      String(secs).padStart(2, "0"),
-    ]
+        hours > 0 ? String(hours).padStart(2, "0") : null,
+        String(minutes).padStart(2, "0"),
+        String(secs).padStart(2, "0"),
+      ]
       .filter(Boolean)
       .join(":");
   }
 
-  const setLocation = () => {
+  const setLocation = useCallback(() => {
     if (videoRef.current && client) {
       const location: VeltLocation = {
         id: secondsToReadableTime(videoRef.current.currentTime),
@@ -112,14 +125,14 @@ export default function VideoComponent() {
       };
       client.setLocation(location);
     }
-  };
+  }, [client, videoRef]);
 
   useEffect(() => {
     if (commentModeState && videoRef.current && client) {
       togglePlayPause();
       setLocation();
     }
-  }, [commentModeState, videoRef.current, client]);
+  }, [commentModeState, videoRef, client, setLocation]);
 
   const togglePlayPause = () => {
     if (videoRef.current) {
@@ -133,85 +146,77 @@ export default function VideoComponent() {
     }
   };
 
-  const updateCustomTimeline = () => {
-    if (videoRef.current && timePassedDivRef.current) {
-      const seekPercent =
-        (videoRef.current.currentTime / videoRef.current.duration) * 100 - 1.5;
-      timePassedDivRef.current.style.width = `${seekPercent}%`;
-    }
-  };
-
-  const handleCommentClick = (
-    event: ReactMouseEvent<HTMLElement, MouseEvent> & {
-      detail?: TimelineCommentDetail;
-    }
-  ) => {
-    const video = videoRef.current;
-    const customDetail = (event as any).detail as TimelineCommentDetail | undefined;
-
-    if (customDetail?.location?.currentMediaPosition !== undefined && video) {
-      if (video.currentTime !== customDetail.location.currentMediaPosition) {
-        (video as HTMLVideoElementWithCurrentTime).currentTime =
-          customDetail.location.currentMediaPosition;
-        setLocation();
-        updateCustomTimeline();
+  const handleCommentClick = useCallback(
+    (
+      event: React.MouseEvent < HTMLElement > & {
+        detail ? : CommentClickDetail;
       }
-    }
-  };
-
-  const onTimelineCommentClick = (
-    event: ReactMouseEvent<HTMLElement, MouseEvent> & {
-      detail?: TimelineCommentDetail;
-    }
-  ) => {
-    if (event) {
-      const { location } = (event as any).detail || {};
-
+    ) => {
       const video = videoRef.current;
-      if (video) {
-        video.pause();
-      }
+      const customDetail = (event as any).detail as
+        | CommentClickDetail
+        | undefined;
 
-      if (location?.currentMediaPosition !== undefined && video?.paused) {
-        // Seek to the given comment media position
-        (video as HTMLVideoElementWithCurrentTime).currentTime =
-          location.currentMediaPosition;
-
-        // Set the Velt Location to the clicked comment location
-        if (location) {
-          client.setLocation(location as VeltLocation);
+      if (customDetail?.location ?.currentMediaPosition !== undefined && video) {
+        if (video?.currentTime !== customDetail.location.currentMediaPosition) {
+          (video as HTMLVideoElementWithCurrentTime).currentTime =
+            customDetail.location.currentMediaPosition;
+          setLocation();
+          updateCustomTimeline();
         }
       }
-    }
-  };
+    },
+    [videoRef, setLocation, updateCustomTimeline]
+  );
+
+  const onTimelineCommentClick = useCallback(
+    (
+      event: React.MouseEvent < HTMLElement > & {
+        detail ? : CommentClickDetail
+      }
+    ) => {
+      if (event) {
+        const {
+          location
+        } = (event as any).detail || {};
+
+        const video = videoRef.current as HTMLVideoElementWithCurrentTime | null;
+        if (video) {
+          video.pause();
+        }
+
+        if (location?.currentMediaPosition !== undefined && video?.paused) {
+          (video as HTMLVideoElementWithCurrentTime).currentTime =
+            location.currentMediaPosition;
+
+          if (location && client) {
+            client.setLocation(location as VeltLocation);
+          }
+        }
+      }
+    },
+    [client, videoRef]
+  );
 
   useEffect(() => {
-    const commentSidebar = document.querySelector<HTMLElement>("velt-comments-sidebar");
+    const commentSidebar = document.querySelector < HTMLElement > ("velt-comments-sidebar");
     if (!commentSidebar) return;
 
-    commentSidebar.addEventListener("onCommentClick", handleCommentClick as EventListener);
+    const wrappedHandleCommentClick = (event: MouseEvent) => {
+      const customEvent: React.MouseEvent < HTMLElement > & {
+        detail ? : CommentClickDetail
+      } = event as any;
 
-    if (!commentPlayerTimelineRef.current) return;
-
-    commentPlayerTimelineRef.current.addEventListener(
-      "onCommentClick",
-      handleCommentClick as EventListener
-    );
-
-    return () => {
-      if (commentSidebar) {
-        commentSidebar.removeEventListener("onCommentClick", handleCommentClick as EventListener);
-      }
-      if (commentPlayerTimelineRef.current) {
-        commentPlayerTimelineRef.current.removeEventListener(
-          "onCommentClick",
-          handleCommentClick as EventListener
-        );
-      }
+      handleCommentClick(customEvent);
     };
-  }, [handleCommentClick, commentPlayerTimelineRef]);
 
-  return (
+    commentSidebar.addEventListener(
+      "onCommentClick",
+      wrappedHandleCommentClick as EventListener
+    );
+  }, [handleCommentClick]);
+
+  return ( 
     <div className="flex flex-col w-full h-full max-w-6xl mx-auto">
       <div className="flex items-center justify-between w-full p-4">
         <div className="relative w-[75%]">
@@ -258,8 +263,8 @@ export default function VideoComponent() {
           <VeltCommentPlayerTimeline
             videoPlayerId="videoPlayerId"
             totalMediaLength={144}
-            ref={commentPlayerTimelineRef}
-            onTimelineCommentClick={onTimelineCommentClick}
+            // ref={commentPlayerTimelineRef}
+            // onTimelineCommentClick={onTimelineCommentClick}
           />
         </div>
         <div className="mt-4 flex">
@@ -275,9 +280,9 @@ export default function VideoComponent() {
           {/* Changed here */}
           <div id="comment-section" className="pl-16 pb-6">
             <VeltComments
-              mode="stream"
+              // mode="stream"
               allowedElementQuerySelectors={["#videoPlayerId"]}
-              defaultIsOpen={true}
+              // defaultIsOpen={true}
             />
             <VeltDocument />
             <VeltCommentsSidebar onCommentClick={handleCommentClick} />
