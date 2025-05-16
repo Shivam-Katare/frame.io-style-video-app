@@ -12,8 +12,8 @@ export default function AuthComponent() {
     return {
       uid: "123",
       organizationId: "organizationId123", // this is the organization id the user belongs to. You should always use this.
-      displayName: "Dalu46",
-      email: "dalu46@gmail.com",
+      displayName: "John Doe",
+      email: "johndoe@gmail.com",
       photoURL: "/video/profile-pic.jpeg",
       color: "#008000", // Use valid Hex code value. Used in the background color of the user's avatar.
       textColor: "#FFFFFF", // Use valid Hex code value. Used in the text color of the user's intial when photoUrl is not present.
