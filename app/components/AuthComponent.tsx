@@ -114,7 +114,7 @@ export default function AuthComponent() {
 
       {/* Dropdown menu */}
       {isDropdownOpen && (
-        <div
+        <div className="text-black"
           style={{
             position: 'absolute',
             top: 'calc(100% + 10px)', // Position below the user display
