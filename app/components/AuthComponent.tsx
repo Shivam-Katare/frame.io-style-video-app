@@ -20,7 +20,7 @@ export default function AuthComponent() {
       organizationId: "organizationId123",
       displayName: "Jane Smith",
       email: "janesmith@example.com",
-      photoURL: "/video/profile-pic-jane.jpg", // Ensure you have this image or change to a valid path
+      photoURL: "/video/profile-pic-jane.png", // Ensure you have this image or change to a valid path
       color: "#FF5733",
       textColor: "#FFFFFF",
     },

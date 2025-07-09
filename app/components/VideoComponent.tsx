@@ -249,7 +249,7 @@ export default function VideoComponent() {
       }
     ) => {
       if (!!event) {
-        // Destructure location from the event detail
+        // Destructure location from the event
         const { location } = event;
 
         const video =
