@@ -82,7 +82,6 @@
 //     };
 //   }, []);
 
-
 //   return (
 //     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }} ref={dropdownRef}>
 //       {/* Clickable user display */}
@@ -170,27 +169,29 @@ import Image from 'next/image';
 
 export default function AuthComponent() {
   const userProfiles = {
-    johnDoe: {
+    davidDoe: {
       uid: "123",
       organizationId: "organizationId123",
-      displayName: "John Doe",
-      email: "johndoe@gmail.com",
+      displayName: "David Doe",
+      email: "daviddoe@gmail.com",
       photoURL: "/video/profile-pic.jpeg",
       color: "#008000",
       textColor: "#FFFFFF",
     },
-    janeSmith: {
+    saraSmith: {
       uid: "456",
       organizationId: "organizationId123",
-      displayName: "Jane Smith",
-      email: "janesmith@example.com",
+      displayName: "Sara Smith",
+      email: "sarasmith@example.com",
       photoURL: "/video/profile-pic-jane.png",
       color: "#FF5733",
       textColor: "#FFFFFF",
     },
   };
 
-  const [currentUserKey, setCurrentUserKey] = useState<'johnDoe' | 'janeSmith'>('johnDoe');
+  const [currentUserKey, setCurrentUserKey] = useState<"davidDoe" | "saraSmith">(
+    "davidDoe"
+  );
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -220,7 +221,7 @@ export default function AuthComponent() {
 
   useIdentify(veltUser);
 
-  const switchUser = (key: 'johnDoe' | 'janeSmith') => {
+  const switchUser = (key: "davidDoe" | "saraSmith") => {
     setCurrentUserKey(key);
     setIsDropdownOpen(false);
   };
@@ -294,34 +295,41 @@ export default function AuthComponent() {
 
       {/* Dropdown menu */}
       {isDropdownOpen && (
-        <div className="text-black"
+        <div
+          className="text-black"
           style={{
-            position: 'absolute',
-            top: 'calc(100% + 10px)',
+            position: "absolute",
+            top: "calc(100% + 10px)",
             right: 0,
-            backgroundColor: 'white',
-            border: '1px solid #ccc',
-            borderRadius: '5px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            backgroundColor: "white",
+            border: "1px solid #ccc",
+            borderRadius: "5px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
             zIndex: 1000,
-            minWidth: '180px',
-            padding: '5px 0',
+            minWidth: "180px",
+            padding: "5px 0",
           }}
         >
           {Object.entries(userProfiles).map(([key, user]) => (
             <div
               key={key}
-              onClick={() => switchUser(key as 'johnDoe' | 'janeSmith')}
+              onClick={() => switchUser(key as "davidDoe" | "saraSmith")}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '8px 15px',
-                cursor: 'pointer',
-                backgroundColor: currentUserKey === key ? '#f0f0f0' : 'transparent',
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "8px 15px",
+                cursor: "pointer",
+                backgroundColor:
+                  currentUserKey === key ? "#f0f0f0" : "transparent",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e0e0e0')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = currentUserKey === key ? '#f0f0f0' : 'transparent')}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = "#e0e0e0")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor =
+                  currentUserKey === key ? "#f0f0f0" : "transparent")
+              }
             >
               <Image
                 src={user.photoURL}
