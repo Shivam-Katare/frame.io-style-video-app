@@ -164,7 +164,7 @@
 
 // ======
 "use client";
-import { useIdentify } from "@veltdev/react";
+import { useIdentify, useVeltClient } from "@veltdev/react";
 import { useState, useRef, useEffect } from "react";
 import Image from 'next/image';
 
@@ -193,6 +193,8 @@ export default function AuthComponent() {
   const [currentUserKey, setCurrentUserKey] = useState<'johnDoe' | 'janeSmith'>('johnDoe');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const { client } = useVeltClient();
 
   const yourAuthenticatedUser = userProfiles[currentUserKey];
 
@@ -224,8 +226,28 @@ export default function AuthComponent() {
   };
 
   useEffect(() => {
+    if (client) {
+      const contactElement = client.getContactElement();
+
+      const allUsersForMentions = Object.values(userProfiles).map(
+        (profile) => ({
+          userId: profile.uid,
+          name: profile.displayName,
+          email: profile.email,
+          photoUrl: profile.photoURL,
+        })
+      );
+
+      contactElement.updateContactList(allUsersForMentions);
+    }
+  }, [client]);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsDropdownOpen(false);
       }
     };
@@ -237,7 +259,10 @@ export default function AuthComponent() {
   }, []);
 
   return (
-    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }} ref={dropdownRef}>
+    <div
+      style={{ position: "relative", display: "flex", alignItems: "center" }}
+      ref={dropdownRef}
+    >
       {/* Clickable user display */}
       <div
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}

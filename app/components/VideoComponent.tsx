@@ -19,6 +19,7 @@ import {
   VeltCommentPlayerTimeline,
   VeltSidebarButton,
   VeltComments,
+  VeltNotificationsTool,
   useCommentModeState,
   useVeltClient,
 } from "@veltdev/react";
@@ -179,7 +180,9 @@ export default function VideoComponent() {
     const newTime = (offsetX / rect.width) * duration;
     video.currentTime = newTime;
     setCurrentTime(newTime);
-    setLocation();
+    requestAnimationFrame(() => {
+      updateCustomTimeline();
+    });
   };
 
   function secondsToReadableTime(seconds: number): string {
@@ -334,7 +337,10 @@ export default function VideoComponent() {
               />
             </div>
           </div>
-          <AuthComponent />
+          <div className="flex items-center gap-4">
+            <VeltNotificationsTool onNotificationClick={handleCommentClick} />
+            <AuthComponent />
+          </div>
         </div>
       </header>
 
